@@ -1,0 +1,12 @@
+To do list:
+
+1) display a stacked histogram showing number of calls at each VAF level
+called by our list and the user's list. (If they include vafs, use those,
+if they don't, then just show breakdown by 'true vafs' from deep validation
+
+2) Add download links for the tables.
+
+3) Clean up helper functions, drop in separate file. For now, stored in server file,
+which prevents having to restart the server every time I make a change to that file. 
+This happens automatically for the server and ui files.
+
