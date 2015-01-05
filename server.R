@@ -26,7 +26,7 @@ createVenn <- function(a, b, range){
   plot(v)
 
   col.fn <- function(col, alpha=0.3) {
-    col<- hcl(col * 360, 130, 60)
+    col <- hcl(col * 360, 130, 60)
     col <- col2rgb(col)/255
     col <- rgb(col[1, ], col[2, ], col[3, ], alpha)
     col
@@ -41,6 +41,27 @@ createVenn <- function(a, b, range){
   text( usr[ 1 ], usr[ 3 ]+0.05, paste("Positive Predictive Value:",round((AB/(AB+B)),4)), adj = c( 1, 0 ), pos=4)
 
 }
+
+#create histogram showing performance per VAF
+createHist <- function(a, b, range){
+  v = NULL;
+  for(vaf in seq(0,95,5)){
+    av = a[a$tum_vaf > vaf & a$tum_vaf <= vaf+5,]
+    allkeys = unique(c(as.character(av$key), as.character(b$key)))
+    keyFound = cbind(allkeys %in% av$key, allkeys %in% b$key)
+    A = length(which(keyFound[,1]==1 & keyFound[,2]==0))
+    AB = length(which(keyFound[,1]==1 & keyFound[,2]==1))
+
+    v = rbind(v, data.frame(vaf=vaf, val=A, shared=AB))
+  }
+  cat(v$val,file=stderr())
+  vals = rep(v$vaf,v$val)
+  hist(vals,breaks=seq(0,95,5),col=rgb(0,1,0,0.3),xlab="Tumor VAF",main="Valid uploaded variants by VAF")
+  vals = rep(v$vaf,v$shared)
+  hist(vals,breaks=seq(0,95,5),col=rgb(0,0,1,0.3),add=T,xlab="",main="")
+  legend("topright",fill=c(rgb(0,1,0,0.3),rgb(0,0,1,0.3)), legend=c("Validated","Uploaded"))
+}
+
 
 #strip the 'key' column from a data frame for display purposes
 stripKeyCol <- function(df){
@@ -95,8 +116,8 @@ shinyServer(function(input, output) {
   }) 
 
 
-
-  #generate the venn
+  ##------------------------------------
+  ##generate the venn diagram (tab 1)
   output$plot <- renderPlot({
 
   if(is.null(inputData())){
@@ -106,8 +127,18 @@ shinyServer(function(input, output) {
   }
  })
   
-  
-  # Generate an HTML table view of the data
+  ##---------------------------------------------------------
+  ## generate a histogram view of performance
+  output$hist <- renderPlot({
+    if(is.null(inputData())){
+      showUploadRequestMessage()
+    } else {
+      createHist(compTable(), cleanInputData(inputData()), input$range)
+    }
+  })
+
+  ##---------------------------------------------------------
+  ## Generate an HTML table view of the uploaded data (tab 3)
   output$uploaded <- renderDataTable({
      if(is.null(inputData())){
        data.frame(message="please upload a file of predictions")
@@ -116,10 +147,10 @@ shinyServer(function(input, output) {
      }},
      options = list(pagelength=25))
  
-
-  # Generate an HTML table view of the truth-set
+  ##---------------------------------------------------------
+  ## Generate an HTML table view of the truth-set (tab 4)
   output$truth <- renderDataTable({
     stripKeyCol(data.frame(compTable()))},
     options = list(pagelength=25))
-  
+
 })

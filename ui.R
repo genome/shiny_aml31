@@ -22,12 +22,13 @@ shinyUI(fluidPage(
       br(),
       sliderInput("range", "VAF:", min = 0, max = 100, value = c(0,100))
     ),
-    
+
     # Show a tabset that includes a plot, summary, and table view
     # of the generated distribution
     mainPanel(
       tabsetPanel(type = "tabs", 
         tabPanel("Performance", plotOutput("plot")), 
+        tabPanel("Performance", plotOutput("hist")), 
         #tabPanel("Caller Performance", verbatimTextOutput("summary")), 
         tabPanel("Uploaded Variants", dataTableOutput("uploaded")),
         tabPanel("Truth-set", dataTableOutput("truth"))
