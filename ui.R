@@ -14,9 +14,13 @@ shinyUI(fluidPage(
 
     #fileInput('vcffile', 'Upload your VCF file',
     #          accept=c('.vcf', '.vcf.gz')),
-    fileInput('tabfile', 'Upload your tab-delimited file'),
-      br(),
-      radioButtons("list", "Truth-set List:",
+    conditionalPanel("!output.fileUploaded",
+      fileInput('tabfile', 'Upload your tab-delimited file')
+     ),
+
+     br(),
+
+     radioButtons("list", "Truth-set List:",
                    c("Platinum" = "plat",
                      "Gold" = "gold")),
 

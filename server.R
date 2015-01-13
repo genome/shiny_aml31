@@ -127,6 +127,11 @@ shinyServer(function(input, output) {
         read.table(inFile$datapath,header=F,sep="\t", col.names=c("Chr","St","Sp","Ref","Var"))
     }) 
     
+    ##reactive expression telling us if data has been uploaded or not
+    output$fileUploaded <- reactive({
+        return(!is.null(inputData()))
+    })
+    outputOptions(output, 'fileUploaded', suspendWhenHidden=FALSE)
     
     ##------------------------------------
     ##generate the venn diagram (tab 1)
