@@ -83,89 +83,107 @@ stripKeyCol <- function(df){
   return(df[,!(names(df) %in% c("key"))])
 }
 
-
+#label uploaded variants as found in truthset or not
 labelFound<-function(upload,truth){
   upload = cleanInputData(upload)
   upload$in_validation = as.character(upload$key) %in% as.character(truth$key)
   return(stripKeyCol(upload))
 }
 
+#placeholder plot that requests an upload
 showUploadRequestMessage <- function(){
     plot(0,0,col="white",xlim=c(1,100),ylim=c(1,100),bty="n",xaxt="n",yaxt="n",ylab="",xlab="")
     text(25,75,"please upload a file of predictions")
 }
 
+#get the name of the list file from the 
+getListFile <- function(truthList){
+    file="list.platinum"
+    if(truthList == "gold"){
+        file = "list.gold"
+    }    
+    return(file)
+}
+
 ##---------------------------------------------------------
 
 
-# Define server logic for random distribution application
+## Define server logic for random distribution application
 shinyServer(function(input, output) {
-
-  # Reactive expression to generate the requested distribution.
-  # This is called whenever the inputs change. The output
-  # functions defined below then all use the value computed from
-  # this expression
-  compTable <- reactive({
-    compList = input$list
-    file = "list.platinum"
-    if(compList == "gold"){
-      file = "list.gold"
-    }
-    read.table(file,header=T,sep="\t")
-  })
-
-  #inputData <- renderTable({
-  inputData <- reactive({
-    # input$file1 will be NULL initially. After the user selects
-    # and uploads a file, it will be a data frame with 'name',
-    # 'size', 'type', and 'datapath' columns. The 'datapath'
-    # column will contain the local filenames where the data can
-    # be found.
-
-    inFile <- input$tabfile
-
-    if (is.null(inFile))
-      return(NULL)
-
-    read.table(inFile$datapath,header=F,sep="\t", col.names=c("Chr","St","Sp","Ref","Var"))
-  }) 
-
-
-  ##------------------------------------
-  ##generate the venn diagram (tab 1)
-  output$plot <- renderPlot({
-
-  if(is.null(inputData())){
-    showUploadRequestMessage()
-  } else {
-    createVenn(compTable(), cleanInputData(inputData()), input$range)
-  }
- })
-  
-  ##---------------------------------------------------------
-  ## generate a histogram view of performance
-  output$hist <- renderPlot({
-    if(is.null(inputData())){
-      showUploadRequestMessage()
-    } else {
-      createHist(compTable(), cleanInputData(inputData()))
-    }
-  })
-
-  ##---------------------------------------------------------
-  ## Generate an HTML table view of the uploaded data (tab 3)
-  output$uploaded <- renderDataTable({
-     if(is.null(inputData())){
-       data.frame(message="please upload a file of predictions")
-     } else {
-       labelFound(data.frame(inputData()),data.frame(compTable()))
-     }},
-     options = list(pagelength=25))
- 
-  ##---------------------------------------------------------
-  ## Generate an HTML table view of the truth-set (tab 4)
-  output$truth <- renderDataTable({
-    stripKeyCol(data.frame(compTable()))},
-    options = list(pagelength=25))
-
+    ## Reactive expression to read the radio buttons and use the correct
+    ## list (platinum or gold) for comparison
+    compTable <- reactive({
+        truthList = input$list
+        read.table(getListFile(truthList),header=T,sep="\t")
+    })
+    
+    ## reactive expression to read the file input by the user
+    inputData <- reactive({
+        ##inFile will be NULL initially
+        inFile <- input$tabfile
+        if (is.null(inFile))
+            return(NULL)
+        
+        read.table(inFile$datapath,header=F,sep="\t", col.names=c("Chr","St","Sp","Ref","Var"))
+    }) 
+    
+    
+    ##------------------------------------
+    ##generate the venn diagram (tab 1)
+    output$plot <- renderPlot({
+        
+        if(is.null(inputData())){
+            showUploadRequestMessage()
+        } else {
+            createVenn(compTable(), cleanInputData(inputData()), input$range)
+        }
+    })
+    
+    ##---------------------------------------------------------
+    ## generate a histogram view of performance
+    output$hist <- renderPlot({
+        if(is.null(inputData())){
+            showUploadRequestMessage()
+        } else {
+            createHist(compTable(), cleanInputData(inputData()))
+        }
+    })
+    
+    ##---------------------------------------------------------
+    ## Generate an HTML table view of the uploaded data (tab 3)
+    output$uploaded <- renderDataTable({
+        if(is.null(inputData())){
+            data.frame(message="please upload a file of predictions")
+        } else {
+            labelFound(data.frame(inputData()),data.frame(compTable()))
+        }},
+        options = list(pagelength=25)
+    )
+    
+    ##---------------------------------------------------------
+    ## Generate an HTML table view of the truth-set (tab 4)
+    output$truth <- renderDataTable({
+        stripKeyCol(data.frame(compTable()))},
+        options = list(pagelength=25)
+    )
+    
+    ##download links
+    output$downloadUserList <- downloadHandler(
+        filename = "annotated_variants.tsv",
+        content = function(file) {
+            if(length(data.frame(inputData())) > 0){ #if file uploaded already
+                write.table(stripKeyCol(labelFound(data.frame(inputData()),data.frame(compTable()))),file,sep="\t",quote=F,row.names=F)
+            } else { #return an empty table, because hey, that's what they asked for...
+                write.table(c(),"/tmp/zz",quote=F)
+            }
+        }
+    )
+    
+    output$downloadTruthList <- downloadHandler(
+        filename = "truth_list.tsv",
+        content = function(file) {          
+            write.table(stripKeyCol(data.frame(compTable())),file,sep="\t",quote=F,row.names=F)
+        }
+    )
+    
 })
