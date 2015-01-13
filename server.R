@@ -47,7 +47,7 @@ createVenn <- function(a, b, range){
   vcol <- c(col.fn(v$colors),rgb(130/255,209/255,201/255))
   vlabs <- v$labels
 
-  legend(0.05, .9, legend=c(paste("Validated Only:",A), paste("Uploaded Only:",B), paste("Shared:",AB)), fill=vcol, x="topleft")
+  legend(0.05, .9, legend=c(paste("Truth-set Only:",A), paste("Uploaded Only:",B), paste("Shared:",AB)), fill=vcol, x="topleft")
   #print sens/spec in bottom left
   usr <- par( "usr" )
   text( usr[ 1 ], usr[ 3 ]+0.1, paste("Sensitivity:",round((AB/A),4)), adj = c( 1, 0 ), pos=4)
@@ -74,7 +74,7 @@ createHist <- function(a, b){
   hist(vals,breaks=seq(0,95,5),col=rgb(0,1,0,0.3),xlab="Tumor VAF",main="Valid uploaded variants by VAF")
   vals = rep(v$vaf,v$shared)
   hist(vals,breaks=seq(0,95,5),col=rgb(0,0,1,0.3),add=T,xlab="",main="")
-  legend("topright",fill=c(rgb(0,1,0,0.3),rgb(0,0,1,0.3)), legend=c("Validated","Uploaded"))
+  legend("topright",fill=c(rgb(0,1,0,0.3),rgb(0,0,1,0.3)), legend=c("Truth-set Variants","Uploaded Variants in Truth-set"))
 }
 
 

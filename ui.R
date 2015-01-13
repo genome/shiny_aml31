@@ -27,7 +27,7 @@ shinyUI(fluidPage(
       br(),
   
       conditionalPanel(condition="input.tabsetPanel=='venn'",
-        sliderInput("range", "VAF:", min = 0, max = 100, value = c(0,100))
+        sliderInput("range", "Compare to Truth-set Variants with VAF:", min = 0, max = 100, value = c(0,100))
       ),
       conditionalPanel(condition="input.tabsetPanel=='uploadList'",
         downloadButton('downloadUserList', 'Download this table')
