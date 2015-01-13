@@ -22,9 +22,18 @@ shinyUI(fluidPage(
 
       br(),
   
-      conditionalPanel(condition="input.tabsetPanel==1",
+      conditionalPanel(condition="input.tabsetPanel=='venn'",
         sliderInput("range", "VAF:", min = 0, max = 100, value = c(0,100))
+      ),
+      conditionalPanel(condition="input.tabsetPanel=='uploadList'",
+        downloadButton('downloadUserList', 'Download this table')
+      ),
+      conditionalPanel(condition="input.tabsetPanel=='truthList'",
+        downloadButton('downloadTruthList', 'Download this table')
       )
+      ## conditionalPanel(condition="input.tabsetPanel=43",
+      ##   downloadButton('downloadList', 'Download')
+      ## )
     ),
 
     # Show a tabset that includes a plot, summary, and table view
