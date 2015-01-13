@@ -7,15 +7,28 @@ options(shiny.maxRequestSize=50*1024^2) #set a 50MB maximum size for the upload 
 
 ##------------------------------------------
 ## these will be moved to a separate file later
+
+
 cleanInputData <- function(df){
     df$key = paste(df[,1],df[,2],df[,4],df[,5],sep="_")
     return(df)
 }
 
-#take two dataframes, each with a "key" column, and create a proportional venn diagram of their overlap
+subsetByVaf <- function(df,range){
+  if("tum_vaf" %in% names(df)){
+    return(df[df$tum_vaf >= range[1] & df$tum_vaf <= range[2],])
+  }
+  return(df)
+}
+
+##----------------------------------------------
+##take two dataframes, each with a "key" column, and create a proportional venn diagram of their overlap
 createVenn <- function(a, b, range){
 
   #use range later to restrict to certain vafs
+  a = subsetByVaf(a,range)
+  b = subsetByVaf(b,range)
+
   allkeys = unique(c(as.character(a$key), as.character(b$key)))
   keyFound = cbind(allkeys %in% a$key, allkeys %in% b$key)
   A = length(which(keyFound[,1]==1 & keyFound[,2]==0))
@@ -39,11 +52,13 @@ createVenn <- function(a, b, range){
   usr <- par( "usr" )
   text( usr[ 1 ], usr[ 3 ]+0.1, paste("Sensitivity:",round((AB/A),4)), adj = c( 1, 0 ), pos=4)
   text( usr[ 1 ], usr[ 3 ]+0.05, paste("Positive Predictive Value:",round((AB/(AB+B)),4)), adj = c( 1, 0 ), pos=4)
+  text( usr[ 1 ], usr[ 3 ]+0.15, paste("VAF range: ",range[1],"-",range[2],sep=""),adj = c( 1, 0 ), pos=4)
+
 
 }
 
 #create histogram showing performance per VAF
-createHist <- function(a, b, range){
+createHist <- function(a, b){
   v = NULL;
   for(vaf in seq(0,95,5)){
     av = a[a$tum_vaf > vaf & a$tum_vaf <= vaf+5,]
@@ -85,7 +100,7 @@ showUploadRequestMessage <- function(){
 
 # Define server logic for random distribution application
 shinyServer(function(input, output) {
-  
+
   # Reactive expression to generate the requested distribution.
   # This is called whenever the inputs change. The output
   # functions defined below then all use the value computed from
@@ -133,7 +148,7 @@ shinyServer(function(input, output) {
     if(is.null(inputData())){
       showUploadRequestMessage()
     } else {
-      createHist(compTable(), cleanInputData(inputData()), input$range)
+      createHist(compTable(), cleanInputData(inputData()))
     }
   })
 
