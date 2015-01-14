@@ -15,8 +15,9 @@ shinyUI(fluidPage(
     #fileInput('vcffile', 'Upload your VCF file',
     #          accept=c('.vcf', '.vcf.gz')),
     conditionalPanel("!output.fileUploaded",
-      fileInput('tabfile', 'Upload your tab-delimited file')
-     ),
+      fileInput('tabfile', 'Upload your variant calls'),
+      helpText("Variant calls should be provided in a 5-column format: [Chromosome, Start, Stop, RefAllele, VariantAllele] Example:   1  1234  1234  A  T")
+    ),
 
      br(),
 
